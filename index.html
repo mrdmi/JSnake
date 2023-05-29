@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div id="gridContainer"></div>
+
+<script>
+    var gridContainer = document.getElementById('gridContainer');
+    var gridArray = [];
+
+    var rows = 16; // Количество строк
+    var columns = 16; // Количество столбцов
+    
+    let empty = []; //пустое пространство
+    
+    //начальные координаты головы
+    const X = 8; 
+    const Y = 8;
+
+    //начальное направление движени
+    const dX = 1; 
+    const dY = 0;
+    
+    //координаты головы
+    let x = X;
+    let y = Y;
+    
+    let direction = [[dX, dY]];
+
+    let snake;
+
+    let food;
+
+
+    for (var i = 0; i < rows; i++) {
+    var rowArray = [];
+    var row = document.createElement('div');
+    row.classList.add('grid-row');
+
+        for (var j = 0; j < columns; j++) {
+            var gridItem = document.createElement('div');
+            gridItem.classList.add('grid-item');
+            row.appendChild(gridItem);
+
+            rowArray.push(gridItem);
+        }
+
+    gridContainer.appendChild(row);
+    gridArray.push(rowArray);
+}
+
+gameSetup();
+
+function animate() {
+    
+    if (direction.length == 1) {
+        if (direction[0][0] == 0) {
+            snake[0].classList.add("vertical-segment");          
+        } else {
+            snake[0].classList.add("horisontal-segment");
+        }
+    } else {
+        if ((direction[0][0] == -1 && direction[1][1] == -1) || (direction[0][1] == 1 && direction[1][0] == 1)) {
+            snake[0].classList.add("bottom-left-corner-segment");
+        }
+        if ((direction[0][0] == -1 && direction[1][1] == 1)  || (direction[0][1] == -1 && direction[1][0] == 1)) {
+            snake[0].classList.add("top-left-corner-segment");
+        }
+        if ((direction[0][0] == 1 && direction[1][1] == -1)  || (direction[0][1] == 1 && direction[1][0] == -1)) {
+            snake[0].classList.add("bottom-right-corner-segment");
+        }
+        if ((direction[0][0] == 1 && direction[1][1] == 1)   || (direction[0][1] == -1 && direction[1][0] == -1)) {
+            snake[0].classList.add("top-right-corner-segment");
+        }
+    }
+    
+    if (direction.length > 1) {
+        direction.shift();
+    }
+    
+    x += direction[0][0]; 
+    y += direction[0][1]; 
+    
+    if (x > 15) {
+        x = 0;
+    }
+    if (x < 0) {
+        x = 15;
+    }
+    if (y > 15) {
+        y = 0;
+    }
+    if (y < 0) {
+        y = 15;
+    }
+    snake[0].classList.remove("snake-head");
+    snake.unshift(gridArray[y][x]);
+    snake[0].classList.add("snake-head");
+    var index = empty.indexOf(snake[0]);
+    if (index !== -1) {
+        empty.splice(index, 1);
+    }
+
+    if (snake.lastIndexOf(snake[0]) != 0) {
+        gameSetup();
+        return;
+    }
+
+    if(snake[0] != food) {
+        let last = snake[snake.length - 1];
+        let preLast = snake[snake.length - 2];
+
+        if ((preLast.classList[1] == "top-right-corner-segment" && last.classList[1] == "left-end-segment") 
+            || (preLast.classList[1] == "top-left-corner-segment" && last.classList[1] == "right-end-segment")) {
+            
+                preLast.className = "grid-item";
+                preLast.classList.add("top-end-segment");
+       
+        } else if ((preLast.classList[1] == "top-right-corner-segment" && last.classList[1] == "bottom-end-segment") 
+            || (preLast.classList[1] == "bottom-right-corner-segment" && last.classList[1] == "top-end-segment")) {
+
+                preLast.className = "grid-item";
+                preLast.classList.add("right-end-segment");
+            
+        } else if ((preLast.classList[1] == "bottom-right-corner-segment" && last.classList[1] == "left-end-segment") 
+            || (preLast.classList[1] == "bottom-left-corner-segment" && last.classList[1] == "right-end-segment")) {
+
+                preLast.className = "grid-item";
+                preLast.classList.add("bottom-end-segment");
+
+        } else if ((preLast.classList[1] == "top-left-corner-segment" && last.classList[1] == "bottom-end-segment") 
+            || (preLast.classList[1] == "bottom-left-corner-segment" && last.classList[1] == "top-end-segment")) {
+                
+                preLast.className = "grid-item";
+                preLast.classList.add("left-end-segment");
+
+        } else {
+            preLast.className = "grid-item";
+            preLast.classList.add(last.classList[1]);
+        }
+        last.className = "grid-item";
+        empty.push(last)
+        snake.pop();
+    } else {
+        food.classList.remove("food");
+        food = putFood();
+    }
+}
+    
+    var animationInterval = setInterval(animate, 250);
+    
+    document.addEventListener('keydown', function(event) {
+        if ((event.key === 'w' || event.key === 'W' || event.key === 'ArrowUp') && direction[direction.length - 1][1] === 0) {
+            direction.push([0, -1]);
+        }
+        if ((event.key === 's' || event.key === 'S' || event.key === 'ArrowDown') && direction[direction.length - 1][1] === 0) {
+            direction.push([0, 1]);
+        }
+        if ((event.key === 'd' || event.key === 'D' || event.key === 'ArrowRight') && direction[direction.length - 1][0] === 0) {
+            direction.push([1, 0]);
+        }
+        if ((event.key === 'a' || event.key === 'A' || event.key === 'ArrowLeft') && direction[direction.length - 1][0] === 0) {
+            direction.push([-1, 0]);
+        }
+    });
+    
+    function gameSetup () {
+        
+    x = X;
+    y = Y;
+    
+    direction = [[dX, dY]];
+
+    empty = [];
+
+    snake = [gridArray[y][x], gridArray[y][x - 1], gridArray[y][x - 2]];
+    
+    gridArray.forEach(function(row) {
+        row.forEach(function(cell) {
+            cell.className = "grid-item";
+            if (snake.indexOf(cell) == -1) {
+                empty.push(cell);
+            }
+        });
+    });
+    
+    snake[0].classList.add("snake-head");
+    snake[1].classList.add("horisontal-segment");
+    snake[2].classList.add("left-end-segment");
+    food = putFood();
+}
+
+function putFood() {
+    let randomIndex = Math.floor(Math.random() * empty.length);
+    let food = empty[randomIndex];
+    food.classList.add("food");
+    return food;
+}
+</script>
+
+<style>
+    .grid-row {
+        display: flex;
+    }
+
+    .grid-item {
+    height: 20px;
+    width: 20px;
+    background-color: lightgray;
+    }
+
+    .snake-head {
+        background-color: black;
+    }
+
+    .vertical-segment {
+        background-color: red;
+        border-left: 4px solid black; 
+        border-right: 4px solid black;
+        box-sizing: border-box;
+    }
+    .horisontal-segment {
+        background-color: red;
+        border-top: 4px solid black; 
+        border-bottom: 4px solid black;
+        box-sizing: border-box;
+    }
+    .top-right-corner-segment {
+        background-color: red;
+        border-top: 4px solid black;
+        border-right: 4px solid black;
+        box-sizing: border-box; 
+    }
+    .bottom-right-corner-segment {
+        background-color: red;
+        border-bottom: 4px solid black;
+        border-right: 4px solid black;
+        box-sizing: border-box; 
+    }
+    .bottom-left-corner-segment {
+        background-color: red;
+        border-bottom: 4px solid black;
+        border-left: 4px solid black;
+        box-sizing: border-box; 
+    }
+    .top-left-corner-segment {
+        background-color: red;
+        border-top: 4px solid black;
+        border-left: 4px solid black;
+        box-sizing: border-box; 
+    }
+    .top-end-segment {
+        background-color: red;
+        border-top: 4px solid black; 
+        border-left: 4px solid black; 
+        border-right: 4px solid black;
+        box-sizing: border-box;
+    }
+    .bottom-end-segment {
+        background-color: red;
+        border-bottom: 4px solid black;
+        border-left: 4px solid black; 
+        border-right: 4px solid black;
+        box-sizing: border-box;
+    }
+    .left-end-segment {
+        background-color: red;
+        border-left: 4px solid black; 
+        border-top: 4px solid black; 
+        border-bottom: 4px solid black;
+        box-sizing: border-box;
+    }
+    .right-end-segment {
+        background-color: red;
+        border-right: 4px solid black;
+        border-top: 4px solid black; 
+        border-bottom: 4px solid black;
+        box-sizing: border-box;
+    }
+    .food {
+        background-color: green;
+    }
+</style>
+</body>
+</html>
